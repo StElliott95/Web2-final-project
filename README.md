@@ -1,3 +1,12 @@
 # WEB2 Final Project
 
-Database task deliverables for the Laravel MVC and MySQL project are being added here.
+Database deliverables for the Modern Movie Discovery & Social Platform project.
+
+## Stack
+
+- PHP with Laravel using MVC
+- MySQL database
+
+## Database task
+
+This repository currently contains the database layer for the assigned objectives: user authentication, the movie catalogue with TMDB data, and the API integrations named in the project brief. See database/README.md for migration setup and integration boundaries. The Word report is in docs/Database_Design_Task_2.docx.
