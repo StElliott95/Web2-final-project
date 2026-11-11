@@ -7,7 +7,7 @@ use App\Models\DiscussionRoom;
 use App\Models\Movie;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -64,7 +64,7 @@ class DiscussionRoomController extends Controller
         ], 201);
     }
 
-    public function stream(Request $request, DiscussionRoom $room): Response
+    public function stream(Request $request, DiscussionRoom $room): StreamedResponse
     {
         $this->ensureMember($room);
         $lastId = max(0, (int) $request->header('Last-Event-ID', $request->query('after', 0)));
