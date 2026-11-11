@@ -56,8 +56,8 @@ class DiscoveryController extends Controller
             );
 
             $this->catalog->syncGenreList($genreData['genres'] ?? []);
-            $popular = $this->catalog->syncMovies($this->nonAdult($popularData['results'] ?? []));
-            $upcoming = $this->catalog->syncMovies($this->nonAdult($upcomingData['results'] ?? []));
+            $popular = collect($this->catalog->syncMovies($this->nonAdult($popularData['results'] ?? [])))->take(8);
+            $upcoming = collect($this->catalog->syncMovies($this->nonAdult($upcomingData['results'] ?? [])))->take(8);
         } catch (ConnectionException|RequestException|RuntimeException $exception) {
             report($exception);
             $tmdbAvailable = false;
@@ -77,7 +77,7 @@ class DiscoveryController extends Controller
         if ($hasFilters) {
             try {
                 $items = $this->fetchFilteredMovies($filters);
-                $searchResults = $this->catalog->syncMovies($this->nonAdult($items));
+                $searchResults = collect($this->catalog->syncMovies($this->nonAdult($items)));
             } catch (ConnectionException|RequestException|RuntimeException $exception) {
                 report($exception);
                 $tmdbAvailable = false;
