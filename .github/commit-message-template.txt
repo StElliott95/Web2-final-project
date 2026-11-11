@@ -1,0 +1,7 @@
+type(scope): imperative summary
+
+Why:
+- Explain the reason for this change.
+
+Validation:
+- List checks performed and their results.
