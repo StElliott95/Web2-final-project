@@ -69,7 +69,7 @@
     @else
         Not analyzed
     @endif
-    @if($row->body && (auth()->id() === $row->user_id || auth()->user()->role === 'admin'))
+    @if($row->body && ((int) auth()->id() === (int) $row->user_id || auth()->user()->role === 'admin'))
         <form action="{{ route('integrations.review-sentiment', $row->id) }}" method="POST">
             @csrf
             <button type="submit">{{ $row->sentiment_label ? 'Re-analyze' : 'Analyze sentiment' }}</button>
