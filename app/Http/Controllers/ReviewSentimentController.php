@@ -14,7 +14,7 @@ class ReviewSentimentController extends Controller
     public function analyze(Review $review, SentimentAnalysisService $sentiment): RedirectResponse
     {
         abort_unless(
-            auth()->id() === $review->user_id || auth()->user()->role === 'admin',
+            (int) auth()->id() === (int) $review->user_id || auth()->user()->role === 'admin',
             403,
             'You may only analyze your own review.'
         );
