@@ -44,4 +44,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(DiscussionMessage::class);
     }
+    // Task 4: reviews (one to many)
+
+    public function getReviews()
+
+    {
+
+        return $this->hasMany(Review::class);
+
+    }
+ 
 }
