@@ -53,5 +53,13 @@ class User extends Authenticatable
         return $this->hasMany(Review::class);
 
     }
- 
+ // Task 5: watchlist + watch history (one to many)
+   public function getWatchlist()
+   {
+       return $this->hasMany(WatchlistItem::class);
+   }
+   public function getWatchHistory()
+   {
+       return $this->hasMany(WatchHistory::class);
+   }
 }
