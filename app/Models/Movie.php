@@ -47,4 +47,14 @@ class Movie extends Model
     {
         return $this->hasMany(DiscussionRoom::class);
     }
+    // Task 4: reviews (one to many)
+
+    public function getReviews()
+
+    {
+
+        return $this->hasMany(Review::class);
+
+    }
+ 
 }
