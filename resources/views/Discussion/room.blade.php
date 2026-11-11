@@ -4,7 +4,7 @@
 
 @section('app-content')
     <section class="discussion-room" id="discussion-room"
-        data-stream-url="{{ route('integrations.discussion-stream', $room->id) }}">
+        data-stream-url="{{ route('integrations.discussion-stream', ['room' => $room->id, 'after' => $messages->last()?->id ?? 0]) }}">
         <a class="discussion-back" href="{{ route('movies.show', $movie->tmdb_id) }}">← Back to movie</a>
         <p class="eyebrow">MOVIE DISCUSSION</p>
         <h1>{{ $room->title ?: $movie->title . ' discussion' }}</h1>
