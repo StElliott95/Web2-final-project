@@ -26,7 +26,7 @@
         }
         .site-header { min-height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 32px; padding: 0 max(24px, calc((100vw - 1200px) / 2)); }
         .brand { color: var(--text); font-weight: 700; font-size: 17px; letter-spacing: .02em; text-decoration: none; white-space: nowrap; }
-        .site-nav { display: flex; align-items: center; gap: 26px; flex: 1; }
+        .site-nav { display: flex; align-items: center; gap: 16px; flex: 1; flex-wrap: wrap; }
         .site-nav a, .header-account { color: var(--muted); text-decoration: none; }
         .site-nav a:hover, .header-account:hover { color: var(--text); }
         .header-account { white-space: nowrap; }
@@ -46,9 +46,9 @@
         .content { background: transparent; max-width: none; margin: 0; padding: 0; border-radius: 0; }
         .site-footer { border-top: 1px solid var(--border); color: var(--muted); padding: 20px 24px; text-align: center; font-size: 13px; }
         .site-footer a { color: var(--muted); }
-        @media (max-width: 680px) {
+        @media (max-width: 1200px) {
             .site-header { flex-wrap: wrap; gap: 8px 18px; padding: 12px 20px; }
-            .site-nav { order: 3; width: 100%; gap: 20px; overflow-x: auto; padding: 6px 0; }
+            .site-nav { order: 3; flex: 0 0 100%; gap: 12px 20px; padding: 6px 0; }
             .header-account { margin-left: auto; }
             .page-shell { width: min(100% - 28px, 1200px); margin-top: 22px; }
         }
