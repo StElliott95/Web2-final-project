@@ -11,10 +11,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Task middleware is registered by its integration branch.
+        $middleware->web(append: [\App\Http\Middleware\EnsureActive::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Use Laravel's standard exception handling.
     })->create();
-
 
