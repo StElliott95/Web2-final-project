@@ -9,7 +9,9 @@ return [
     ],
 
     'maps' => [
-        'endpoint' => env('MAPS_API_ENDPOINT') ?: 'https://overpass-api.de/api/interpreter',
+        'endpoint' => env('MAPS_API_ENDPOINT') ?: 'https://overpass.private.coffee/api/interpreter',
+        'fallback_endpoint' => env('MAPS_API_FALLBACK_ENDPOINT') ?: 'https://overpass-api.de/api/interpreter',
+        'timeout' => (int) env('MAPS_API_TIMEOUT', 30),
         'cache_minutes' => (int) env('MAPS_API_CACHE_MINUTES', 60),
     ],
 
