@@ -35,7 +35,7 @@ class WeatherController extends Controller
 
         $condition = mb_strtolower($current['condition']);
         $genre = match (true) {
-            preg_match('/rain|snow|storm|cold/', $condition) === 1 => 'Drama',
+            preg_match('/rain|drizzle|snow|storm|cold/', $condition) === 1 => 'Drama',
             preg_match('/clear|sun|hot/', $condition) === 1 => 'Adventure',
             preg_match('/cloud|fog|mist/', $condition) === 1 => 'Mystery',
             default => 'Comedy',

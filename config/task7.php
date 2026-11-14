@@ -1,20 +1,16 @@
 <?php
 
 return [
-    'timeout' => (int) env('TASK7_API_TIMEOUT', 10),
+    'timeout' => (int) env('TASK7_API_TIMEOUT', 15),
 
     'weather' => [
-        'endpoint' => env('WEATHER_API_ENDPOINT'),
-        'token' => env('WEATHER_API_TOKEN'),
-        'temperature_path' => env('WEATHER_API_TEMPERATURE_PATH', 'temperature_c'),
-        'condition_path' => env('WEATHER_API_CONDITION_PATH', 'condition'),
-        'description_path' => env('WEATHER_API_DESCRIPTION_PATH', 'description'),
+        'endpoint' => env('WEATHER_API_ENDPOINT') ?: 'https://api.open-meteo.com/v1/forecast',
+        'cache_minutes' => (int) env('WEATHER_API_CACHE_MINUTES', 15),
     ],
 
     'maps' => [
-        'endpoint' => env('MAPS_API_ENDPOINT'),
-        'token' => env('MAPS_API_TOKEN'),
-        'results_path' => env('MAPS_API_RESULTS_PATH', 'results'),
+        'endpoint' => env('MAPS_API_ENDPOINT') ?: 'https://overpass-api.de/api/interpreter',
+        'cache_minutes' => (int) env('MAPS_API_CACHE_MINUTES', 60),
     ],
 
     'sentiment' => [
