@@ -16,6 +16,8 @@
             </div>
         </header>
 
+        @include('Integrations.discover-tools')
+
         @if(! $tmdbAvailable)
             <p class="service-message" role="status">
                 TMDB is temporarily unavailable. Showing saved movies where possible.
