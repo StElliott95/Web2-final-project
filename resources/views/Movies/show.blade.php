@@ -50,6 +50,14 @@
                         <span>Genres unavailable</span>
                     @endforelse
                 </div>
+                <div class="movie-actions">
+                    @if($movie->release_date)
+                        <a class="btn" href="{{ route('integrations.calendar-export', $movie->id) }}">Add release to calendar</a>
+                    @endif
+                    @auth
+                        <a class="btn" href="{{ route('integrations.discussion-room', $movie->id) }}">Join movie discussion</a>
+                    @endauth
+                </div>
                 <p><a class="btn" href="{{ route('list-reviews', $movie->id) }}">Reviews</a></p>@auth<form method="post" action="{{ route('add-watchlist') }}">@csrf<input type="hidden" name="movie_id" value="{{ $movie->id }}"><button>Add to watchlist</button></form>@endauth<h2>Overview</h2>
                 <p>{{ $movie->overview ?: 'No overview is available.' }}</p>
                 @if($director)
@@ -101,6 +109,7 @@
         .detail-copy h1 { font-size: clamp(30px, 4vw, 44px); margin: 0 0 12px; }
         .detail-copy h2, .cast-section h2 { font-size: 22px; margin: 24px 0 10px; }
         .muted { color: #a8b0bb; }
+        .movie-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
         .genre-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
         .genre-list span { color: #f4f3ef; background: #202832; border: 1px solid #2d3541; border-radius: 99px; padding: 4px 10px; font-size: 13px; }
         .cast-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
