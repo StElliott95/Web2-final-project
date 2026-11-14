@@ -43,13 +43,15 @@ class TmdbService
         return $this->request('genre/movie/list', ['language' => 'en-US']);
     }
 
-    public function searchMovies(string $query): array
+    public function searchMovies(string $query, int $page = 1, ?int $year = null): array
     {
-        return $this->request('search/movie', [
+        return $this->request('search/movie', array_filter([
             'query' => $query,
             'include_adult' => false,
             'language' => 'en-US',
-        ]);
+            'page' => max(1, min(500, $page)),
+            'primary_release_year' => $year,
+        ], fn ($value) => $value !== null && $value !== ''));
     }
 
     public function discoverMovies(array $filters): array

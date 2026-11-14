@@ -64,7 +64,7 @@
             <section class="movie-section" aria-labelledby="results-heading">
                 <div class="section-heading">
                     <h2 id="results-heading">Search results</h2>
-                    <span>{{ $searchResults->count() }} movies</span>
+                    <span>{{ $searchResults->count() }} on this page</span>
                 </div>
                 @if($searchFailed)
                     <p class="service-message" role="status">Search is using the saved movie catalogue because TMDB could not be reached.</p>
@@ -76,6 +76,17 @@
                         <p class="empty-state">No saved movies match these search options.</p>
                     @endforelse
                 </div>
+                @if($searchPagination && $searchPagination['total_pages'] > 1)
+                    <nav class="search-pagination" aria-label="Search result pages">
+                        @if($searchPagination['page'] > 1)
+                            <a href="{{ request()->fullUrlWithQuery(['page' => $searchPagination['page'] - 1]) }}">Previous</a>
+                        @endif
+                        <span aria-current="page">Page {{ $searchPagination['page'] }} of {{ $searchPagination['total_pages'] }}</span>
+                        @if($searchPagination['page'] < $searchPagination['total_pages'])
+                            <a href="{{ request()->fullUrlWithQuery(['page' => $searchPagination['page'] + 1]) }}">Next</a>
+                        @endif
+                    </nav>
+                @endif
             </section>
         @else
             @if($featured)
@@ -158,6 +169,9 @@
         .movie-card-info h3 { font-size: 15px; margin: 0 0 6px; }
         .movie-card-info p { color: #a8b0bb; font-size: 13px; margin: 0; }
         .empty-state { color: #a8b0bb; }
+        .search-pagination { display: flex; justify-content: center; align-items: center; gap: 18px; }
+        .search-pagination a { color: #e0ae55; text-decoration: none; }
+        .search-pagination span { color: #a8b0bb; }
         @media (max-width: 900px) {
             .movie-search { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .search-query { grid-column: 1 / -1; }
