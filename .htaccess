@@ -1,0 +1,6 @@
+# Serve only Laravel's public directory; never expose .env, vendor, or storage.
+Options -Indexes
+RewriteEngine On
+RewriteRule ^$ /Web2/public/ [R=302,L]
+RewriteRule ^public(/.*)?$ - [L]
+RewriteRule ^ - [F,L]

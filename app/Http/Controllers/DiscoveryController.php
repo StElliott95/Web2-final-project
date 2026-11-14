@@ -82,7 +82,7 @@ class DiscoveryController extends Controller
                 report($exception);
                 $tmdbAvailable = false;
                 $searchFailed = true;
-                $searchResults = $this->localCatalogue($filters)->get();
+                $searchResults = $this->localCatalogue($filters);
             }
         }
 
@@ -228,3 +228,4 @@ class DiscoveryController extends Controller
         return $query->limit(40)->get();
     }
 }
+
