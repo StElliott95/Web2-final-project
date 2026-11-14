@@ -33,6 +33,7 @@
         .page-shell { width: min(1200px, calc(100% - 40px)); margin: 32px auto 64px; min-height: 65vh; }
         .flash { padding: 12px 15px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; }
         .success { color: var(--success); }
+        .status { color: var(--success); }
         .error { color: #ffaaaa; }
         .danger { background: #963e43 !important; }
         .btn, button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--accent); color: #171717; border: 1px solid transparent; border-radius: 7px; padding: 9px 15px; font-weight: 700; cursor: pointer; text-decoration: none; }
@@ -64,13 +65,16 @@
             <a href="{{ route('discover') }}#upcoming">Upcoming</a>
         @if(Route::has('recommendations'))<a href="{{ route('recommendations') }}">For you</a>@endif @if(Route::has('lists.public'))<a href="{{ route('lists.public') }}">Community</a>@auth<a href="{{ route('lists.index') }}">My lists</a>@endauth @endif @auth @if(auth()->user()->role === 'admin' && Route::has('admin.dashboard'))<a href="{{ route('admin.dashboard') }}">Admin</a>@endif @endauth</nav>
         @auth
-            <span class="header-account">{{ auth()->user()->name }}</span><form method="post" action="{{ route('logout') }}">@csrf<button>Sign out</button></form>
+            <a class="header-account" href="{{ route('profile.edit') }}">{{ auth()->user()->name }}</a><form method="post" action="{{ route('logout') }}">@csrf<button>Sign out</button></form>
             @if(auth()->user()->role === 'admin' && \Illuminate\Support\Facades\Route::has('admin-reviews'))
                 <a class="header-account" href="{{ route('admin-reviews') }}">Moderation</a>
             @endif
         @else
             @if(\Illuminate\Support\Facades\Route::has('login'))
                 <a class="header-account" href="{{ route('login') }}">Sign in</a>
+            @endif
+            @if(\Illuminate\Support\Facades\Route::has('register'))
+                <a class="header-account" href="{{ route('register') }}">Create account</a>
             @endif
         @endauth
     </header>
@@ -81,6 +85,9 @@
         @endif
         @if(session('error'))
             <p class="flash error" role="alert">{{ session('error') }}</p>
+        @endif
+        @if(session('status'))
+            <p class="flash status" role="status">{{ session('status') }}</p>
         @endif
         @foreach($errors->all() as $error)
             <p class="flash error" role="alert">{{ $error }}</p>

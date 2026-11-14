@@ -36,7 +36,15 @@ Requires PHP 8.2 or newer, Composer, and MySQL. Blade templates use the shared i
 4. For local demonstration data, run `php artisan db:seed --class=TeamDemoSeeder`.
 5. Run `php artisan serve`. With XAMPP in `C:\xampp\htdocs\Web2`, use `http://localhost/Web2/public` instead.
 
-The seeder creates local demonstration accounts and runs only in local/testing environments. Do not use its accounts outside local development. Login supports the team's existing users; registration remains owned by the authentication task.
+The seeder creates local demonstration accounts and runs only in local/testing environments. Do not use its accounts outside local development. Users can register, manage their profile, change passwords, and request password-reset links.
+
+## Authentication
+
+Registration and sign-in use the Laravel session guard. Passwords are hashed by the `User` model, login and recovery endpoints are rate-limited, and password resets use Laravel's password broker and the existing `password_reset_tokens` table. Profile updates never accept a role or account-status field; changing an email requires the current password.
+
+The example environment uses `MAIL_MAILER=log`, so password-reset links are written to `storage/logs/laravel.log` during local development. Configure Laravel's `MAIL_*` settings for a real mail transport before using password recovery outside a local demo.
+
+GitHub sign-in is shown after `GITHUB_OAUTH_CLIENT_ID` and `GITHUB_OAUTH_CLIENT_SECRET` are configured. Create a GitHub OAuth App and set its Authorization callback URL to the app URL followed by `/auth/github/callback` (for the XAMPP example: `http://localhost/Web2/public/auth/github/callback`). Set `GITHUB_OAUTH_REDIRECT_URI` to that same URL in `.env`. The app requests `read:user` and `user:email`, requires a verified email address, and does not store GitHub access tokens. Existing local accounts with the same verified email are linked to the GitHub identity.
 
 Member flow: sign in, open **For you**, edit genre/actor/director preferences, then manage **My lists** or browse **Community**. Private lists are visible only to their owner. Public lists remain editable only by their owner.
 
@@ -58,7 +66,7 @@ Implementation notes are in [Task 6](docs/Task_6_Integration.docx), [Task 8](doc
 
 The team leader merged PRs #7 → #6 → #8 → #9 → #10 in dependency order. After each prerequisite merges, update and retarget the next PR to `main` and inspect its diff before merging. If squash merging changes the prerequisite history, remove already-merged changes from the next PR through the agreed team workflow; do not force-push shared branches without agreement.
 
-The authentication owner should reconcile the minimal existing-account login/logout routes with their full authentication feature and retain password hashing, `user`/`admin` role values, `is_active` enforcement, and the protection against mass-assigning administrative access. Review/watch-history owners should retain the shared internal movie IDs and the 1–10 rating scale. Movie detail URLs continue to use TMDB IDs.
+Authentication uses Laravel's session guard. Registration creates ordinary active users; role and account-status fields are not accepted from forms. Login rejects inactive accounts, and the shared middleware ends sessions for accounts suspended by an administrator. Review/watch-history owners should retain the shared internal movie IDs and the 1-10 rating scale. Movie detail URLs continue to use TMDB IDs.
 
 The TMDB owner must supply `TMDB_READ_ACCESS_TOKEN` privately in their local environment, clear cached configuration, and verify live discovery, details and posters. Do not commit credentials. This integration was verified using the saved catalogue because no live token was available.
 
