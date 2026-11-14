@@ -58,7 +58,7 @@
                         <a class="btn" href="{{ route('integrations.discussion-room', $movie->id) }}">Join movie discussion</a>
                     @endauth
                 </div>
-                <h2>Overview</h2>
+                <p><a class="btn" href="{{ route('list-reviews', $movie->id) }}">Reviews</a></p>@auth<form method="post" action="{{ route('add-watchlist') }}">@csrf<input type="hidden" name="movie_id" value="{{ $movie->id }}"><button>Add to watchlist</button></form>@endauth<h2>Overview</h2>
                 <p>{{ $movie->overview ?: 'No overview is available.' }}</p>
                 @if($director)
                     <p><strong>Director:</strong> {{ $director->person->name }}</p>
@@ -130,3 +130,4 @@
         }
     </style>
 @endsection
+
