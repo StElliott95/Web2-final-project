@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 use RuntimeException;
@@ -33,6 +33,7 @@ class DiscoveryController extends Controller
             'genre' => ['nullable', 'integer', 'min:1'],
             'year' => ['nullable', 'integer', 'min:1888', 'max:' . (date('Y') + 10)],
             'sort_by' => ['nullable', 'in:popularity.desc,vote_average.desc,release_date.desc,title.asc'],
+            'page' => ['nullable', 'integer', 'min:1', 'max:500'],
         ]);
 
         $tmdbAvailable = true;
@@ -61,8 +62,9 @@ class DiscoveryController extends Controller
         } catch (ConnectionException|RequestException|RuntimeException $exception) {
             report($exception);
             $tmdbAvailable = false;
-            $popular = $this->localCatalogue(['sort_by' => 'popularity.desc'])->take(8);
+            $popular = $this->localCatalogue(['sort_by' => 'popularity.desc'])->getCollection()->take(8);
             $upcoming = Movie::with('genres')
+                ->where('adult', false)
                 ->whereDate('release_date', '>=', now()->toDateString())
                 ->orderBy('release_date')
                 ->limit(8)
@@ -73,16 +75,31 @@ class DiscoveryController extends Controller
         $hasFilters = collect($filters)->contains(fn ($value) => $value !== null && $value !== '');
 
         $searchResults = null;
+        $searchPagination = null;
 
         if ($hasFilters) {
             try {
-                $items = $this->fetchFilteredMovies($filters);
-                $searchResults = collect($this->catalog->syncMovies($this->nonAdult($items)));
+                $requestedPage = max(1, (int) ($filters['page'] ?? 1));
+                $payload = $this->fetchFilteredMovies($filters);
+                $searchPagination = $this->paginationInfo($payload, $requestedPage);
+
+                if ($requestedPage > $searchPagination['total_pages']) {
+                    $filters['page'] = $searchPagination['total_pages'];
+                    $payload = $this->fetchFilteredMovies($filters);
+                    $searchPagination = $this->paginationInfo($payload, (int) $filters['page']);
+                }
+
+                $searchResults = collect($this->catalog->syncMovies($this->nonAdult($payload['results'] ?? [])));
             } catch (ConnectionException|RequestException|RuntimeException $exception) {
                 report($exception);
                 $tmdbAvailable = false;
                 $searchFailed = true;
-                $searchResults = $this->localCatalogue($filters);
+                $localResults = $this->localCatalogue($filters);
+                $searchResults = $localResults->getCollection();
+                $searchPagination = [
+                    'page' => $localResults->currentPage(),
+                    'total_pages' => $localResults->lastPage(),
+                ];
             }
         }
 
@@ -92,6 +109,7 @@ class DiscoveryController extends Controller
             'popular',
             'upcoming',
             'searchResults',
+            'searchPagination',
             'tmdbAvailable',
             'searchFailed'
         ));
@@ -107,6 +125,9 @@ class DiscoveryController extends Controller
                 now()->addHours(12),
                 fn () => $this->tmdb->movieDetails($tmdbId)
             );
+
+            abort_if((bool) ($details['adult'] ?? false), 404);
+
             $credits = Cache::remember(
                 'tmdb:credits:' . $tmdbId,
                 now()->addHours(12),
@@ -118,6 +139,7 @@ class DiscoveryController extends Controller
             $tmdbAvailable = false;
             $movie = Movie::with(['genres', 'credits.person'])
                 ->where('tmdb_id', $tmdbId)
+                ->where('adult', false)
                 ->firstOrFail();
             $details = [];
         }
@@ -128,22 +150,26 @@ class DiscoveryController extends Controller
     private function fetchFilteredMovies(array $filters): array
     {
         $query = trim((string) ($filters['q'] ?? ''));
+        $page = max(1, (int) ($filters['page'] ?? 1));
 
         if ($query !== '') {
             $cacheKey = 'tmdb:search:' . sha1(json_encode($filters));
             $payload = Cache::remember(
                 $cacheKey,
                 now()->addMinutes(10),
-                fn () => $this->tmdb->searchMovies($query)
+                fn () => $this->tmdb->searchMovies($query, $page, isset($filters['year']) ? (int) $filters['year'] : null)
             );
 
-            return $this->filterSearchResults($payload['results'] ?? [], $filters);
+            $payload['results'] = $this->filterSearchResults($payload['results'] ?? [], $filters);
+
+            return $payload;
         }
 
         $parameters = array_filter([
             'with_genres' => $filters['genre'] ?? null,
             'primary_release_year' => $filters['year'] ?? null,
             'sort_by' => $filters['sort_by'] ?? 'popularity.desc',
+            'page' => $page,
         ], fn ($value) => $value !== null && $value !== '');
 
         $cacheKey = 'tmdb:discover:' . sha1(json_encode($parameters));
@@ -153,7 +179,15 @@ class DiscoveryController extends Controller
             fn () => $this->tmdb->discoverMovies($parameters)
         );
 
-        return $payload['results'] ?? [];
+        return $payload;
+    }
+
+    private function paginationInfo(array $payload, int $requestedPage): array
+    {
+        return [
+            'page' => max(1, $requestedPage),
+            'total_pages' => min(500, max(1, (int) ($payload['total_pages'] ?? 1))),
+        ];
     }
 
     private function filterSearchResults(array $results, array $filters): array
@@ -189,9 +223,9 @@ class DiscoveryController extends Controller
         return array_values(array_filter($items, fn ($item) => ! ($item['adult'] ?? false)));
     }
 
-    private function localCatalogue(array $filters): Collection
+    private function localCatalogue(array $filters): LengthAwarePaginator
     {
-        $query = Movie::with('genres');
+        $query = Movie::with('genres')->where('adult', false);
 
         if (! empty($filters['q'])) {
             $term = trim((string) $filters['q']);
@@ -225,7 +259,14 @@ class DiscoveryController extends Controller
                 $query->orderByDesc('popularity');
         }
 
-        return $query->limit(40)->get();
+        $page = max(1, (int) ($filters['page'] ?? 1));
+        $results = (clone $query)->paginate(20, ['*'], 'page', $page);
+
+        if ($page > $results->lastPage()) {
+            $results = (clone $query)->paginate(20, ['*'], 'page', $results->lastPage());
+        }
+
+        return $results->withQueryString();
     }
 }
 

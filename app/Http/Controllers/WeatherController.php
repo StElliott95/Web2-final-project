@@ -43,6 +43,7 @@ class WeatherController extends Controller
 
         $movies = Movie::query()
             ->with('genres')
+            ->where('adult', false)
             ->whereHas('genres', fn (Builder $query) => $query->whereRaw('LOWER(name) = ?', [mb_strtolower($genre)]))
             ->orderByDesc('popularity')
             ->limit(8)

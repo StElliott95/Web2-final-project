@@ -16,7 +16,8 @@ return [
     ],
 
     'sentiment' => [
-        'endpoint' => env('SENTIMENT_API_ENDPOINT'),
-        'token' => env('SENTIMENT_API_TOKEN'),
+        'endpoint' => env('SENTIMENT_API_ENDPOINT') ?: 'https://router.huggingface.co/hf-inference/models/cardiffnlp/twitter-roberta-base-sentiment-latest',
+        'token' => env('SENTIMENT_API_TOKEN') ?: env('HF_TOKEN'),
+        'timeout' => (int) env('SENTIMENT_API_TIMEOUT', 30),
     ],
 ];

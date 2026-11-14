@@ -24,7 +24,7 @@ Use the branch and pull request process in CONTRIBUTING.md. The main-branch prot
 ## Task 7 integrations
 
 - [Task 7 API Integrations](docs/Task_7_API_Integrations.docx) documents the weather, maps/geolocation, sentiment, calendar, and real-time discussion integrations.
-- The brief does not name vendors for the Weather, Maps/Geolocation, or Sentiment Analysis APIs. Configure compatible endpoints and credentials in Laravel environment variables; the documented JSON contracts are used by the application.
+- Weather uses Open-Meteo and nearby cinemas use OpenStreetMap data through Overpass as no-key defaults; the page includes provider attribution. Open-Meteo's free API is for non-commercial use. Sentiment analysis defaults to Hugging Face Inference with an open CardiffNLP English model; set `SENTIMENT_API_TOKEN` in `.env` to enable it. Hugging Face's free monthly inference credits are limited and may change.
 
 ## Running the integrated tasks
 
@@ -36,7 +36,7 @@ Requires PHP 8.2 or newer, Composer, and MySQL. Blade templates use the shared i
 4. For local demonstration data, run `php artisan db:seed --class=TeamDemoSeeder`.
 5. Run `php artisan serve`. With XAMPP in `C:\xampp\htdocs\Web2`, use `http://localhost/Web2/public` instead.
 
-The local demonstration accounts are `admin@frame.test` / `FrameAdmin!2026` and `maya@frame.test` / `FrameDemo!2026`. The seeder runs only in local/testing environments. Login supports the team's existing users; registration remains owned by the authentication task.
+The seeder creates local demonstration accounts and runs only in local/testing environments. Do not use its accounts outside local development. Login supports the team's existing users; registration remains owned by the authentication task.
 
 Member flow: sign in, open **For you**, edit genre/actor/director preferences, then manage **My lists** or browse **Community**. Private lists are visible only to their owner. Public lists remain editable only by their owner.
 
@@ -44,7 +44,7 @@ Admin flow: sign in, open **Admin**, then manage users, edit local movies, use t
 
 Task 6 uses normalized catalogue relationships, viewing history, and the team's 1–10 review scale. Task 8 adds private/public lists with unique movie membership. Task 11 reuses existing review moderation and adds administration and activity tracking. All features share the team's charcoal and muted-gold Blade layout.
 
-Set `TMDB_READ_ACCESS_TOKEN` for live discovery. Without it, discovery and details use saved catalogue data. The local demo contains six saved films with unavailable-poster placeholders.
+Set `TMDB_READ_ACCESS_TOKEN` for live discovery. Without it, discovery and details use saved catalogue data. Set `SENTIMENT_API_TOKEN` to a Hugging Face user token with Inference Providers permission to enable review sentiment. Keep both tokens in `.env`; never commit them. The local demo contains six saved films with unavailable-poster placeholders.
 
 ## Integration tests
 

@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('app-content')
 <h1>{{ $movie->title }}</h1>
+@include('Reviews.sentiment-disclosure')
 <h3>
        Average rating:
        {{ $average ? round($average, 1) : 'no ratings yet' }} / 10

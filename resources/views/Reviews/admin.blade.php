@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('app-content')
 <h1>Review moderation</h1>
+@include('Reviews.sentiment-disclosure')
 <table>
 <thead>
 <tr>
