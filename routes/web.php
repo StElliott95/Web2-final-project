@@ -7,4 +7,4 @@ require __DIR__.'/session.php';
 foreach (['recommendations','lists','admin'] as $feature) {
     if (is_file(__DIR__.'/'.$feature.'.php')) require __DIR__.'/'.$feature.'.php';
 }
-
+require __DIR__.'/integrations.php';
