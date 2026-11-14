@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -10,72 +13,142 @@ class MapsGeolocationService
     public function nearbyPlaces(float $latitude, float $longitude, float $radiusKm): array
     {
         $endpoint = trim((string) config('task7.maps.endpoint'));
+        $fallbackEndpoint = trim((string) config('task7.maps.fallback_endpoint'));
 
-        if ($endpoint === '') {
+        if ($endpoint !== '' && rtrim($fallbackEndpoint, '/') === rtrim($endpoint, '/')) {
+            $fallbackEndpoint = str_contains($endpoint, 'overpass-api.de')
+                ? 'https://overpass.private.coffee/api/interpreter'
+                : 'https://overpass-api.de/api/interpreter';
+        }
+
+        // The main public endpoint has recently timed out for this project, so
+        // prefer the alternate public instance even when an old .env selects it.
+        if (str_contains($endpoint, 'overpass-api.de') && str_contains($fallbackEndpoint, 'overpass.private.coffee')) {
+            [$endpoint, $fallbackEndpoint] = [$fallbackEndpoint, $endpoint];
+        }
+
+        $endpoints = array_values(array_unique(array_filter([$endpoint, $fallbackEndpoint])));
+
+        if ($endpoints === []) {
             throw new RuntimeException('Maps/Geolocation API endpoint is not configured.');
         }
 
-        $request = Http::acceptJson()->timeout((int) config('task7.timeout', 10));
-        $token = trim((string) config('task7.maps.token'));
+        $radiusKm = min(50, max(1, $radiusKm));
+        $cacheKey = sprintf('task7:cinemas:%.3f:%.3f:%.1f', $latitude, $longitude, $radiusKm);
+        $cacheMinutes = max(1, (int) config('task7.maps.cache_minutes', 60));
 
-        if ($token !== '') {
-            $request = $request->withToken($token);
-        }
+        return Cache::store('file')->remember($cacheKey, now()->addMinutes($cacheMinutes), function () use ($endpoints, $latitude, $longitude, $radiusKm): array {
+            $lastException = null;
 
-        $response = $request->get($endpoint, [
-            'latitude' => $latitude,
-            'longitude' => $longitude,
-            'radius_km' => $radiusKm,
-        ])->throw();
+            foreach ($endpoints as $endpoint) {
+                try {
+                    return $this->fetchPlaces($endpoint, $latitude, $longitude, $radiusKm);
+                } catch (ConnectionException|RequestException|RuntimeException $exception) {
+                    $lastException = $exception;
+                }
+            }
 
-        $payload = $response->json();
+            if ($lastException !== null) {
+                throw $lastException;
+            }
 
-        if (! is_array($payload)) {
-            throw new RuntimeException('Maps/Geolocation API returned an invalid JSON response.');
-        }
+            throw new RuntimeException('No maps API endpoint could be reached.');
+        });
+    }
 
-        $items = data_get($payload, config('task7.maps.results_path', 'results'));
+    private function fetchPlaces(string $endpoint, float $latitude, float $longitude, float $radiusKm): array
+    {
+        $requestTimeout = max(30, (int) config('task7.maps.timeout', 30));
+        $radiusMeters = (int) round($radiusKm * 1000);
+        $query = sprintf(
+            '[out:json][timeout:%d];nwr(around:%d,%.6f,%.6f)["amenity"="cinema"];out body center;',
+            max(15, $requestTimeout - 5),
+            $radiusMeters,
+            $latitude,
+            $longitude
+        );
+
+        $payload = Http::acceptJson()
+            ->asForm()
+            ->withUserAgent('FrameMovieDiscovery/1.0 (+https://github.com/StElliott95/Web2-final-project)')
+            ->timeout($requestTimeout)
+            ->post($endpoint, ['data' => $query])
+            ->throw()
+            ->json();
+
+        $items = data_get($payload, 'elements');
 
         if (! is_array($items)) {
-            throw new RuntimeException('Maps/Geolocation API response must contain a results array.');
+            throw new RuntimeException('OpenStreetMap Overpass returned an invalid places response.');
         }
 
         $places = [];
 
         foreach ($items as $item) {
-            if (! is_array($item)
-                || ! isset($item['name'], $item['latitude'], $item['longitude'])
-                || ! is_numeric($item['latitude'])
-                || ! is_numeric($item['longitude'])) {
+            if (! is_array($item) || ! is_array($item['tags'] ?? null)) {
                 continue;
             }
 
-            $placeLatitude = (float) $item['latitude'];
-            $placeLongitude = (float) $item['longitude'];
+            $name = trim((string) ($item['tags']['name'] ?? ''));
+            $placeLatitude = $item['lat'] ?? $item['center']['lat'] ?? null;
+            $placeLongitude = $item['lon'] ?? $item['center']['lon'] ?? null;
+
+            if ($name === '' || ! is_numeric($placeLatitude) || ! is_numeric($placeLongitude)) {
+                continue;
+            }
+
+            $placeLatitude = (float) $placeLatitude;
+            $placeLongitude = (float) $placeLongitude;
 
             if ($placeLatitude < -90 || $placeLatitude > 90 || $placeLongitude < -180 || $placeLongitude > 180) {
                 continue;
             }
 
-            $mapUrl = $item['map_url'] ?? null;
-            $scheme = is_string($mapUrl) ? parse_url($mapUrl, PHP_URL_SCHEME) : null;
+            $tags = $item['tags'];
+            $address = $this->formatAddress($tags);
+            $type = $item['type'] ?? null;
+            $id = $item['id'] ?? null;
+            $mapUrl = in_array($type, ['node', 'way', 'relation'], true) && is_numeric($id)
+                ? sprintf('https://www.openstreetmap.org/%s/%d', $type, (int) $id)
+                : null;
 
             $places[] = [
-                'name' => mb_substr(trim((string) $item['name']), 0, 150),
+                'name' => mb_substr($name, 0, 150),
                 'latitude' => $placeLatitude,
                 'longitude' => $placeLongitude,
-                'address' => isset($item['address']) ? mb_substr(trim((string) $item['address']), 0, 255) : null,
-                'distance_km' => isset($item['distance_km']) && is_numeric($item['distance_km'])
-                    ? (float) $item['distance_km']
-                    : null,
-                'map_url' => in_array($scheme, ['http', 'https'], true) ? $mapUrl : null,
+                'address' => $address,
+                'distance_km' => $this->distanceInKm($latitude, $longitude, $placeLatitude, $placeLongitude),
+                'map_url' => $mapUrl,
             ];
-
-            if (count($places) >= 15) {
-                break;
-            }
         }
 
-        return $places;
+        usort($places, fn (array $left, array $right): int => $left['distance_km'] <=> $right['distance_km']);
+
+        return array_slice($places, 0, 15);
+    }
+
+    private function formatAddress(array $tags): ?string
+    {
+        $street = trim(implode(' ', array_filter([
+            $tags['addr:street'] ?? null,
+            $tags['addr:housenumber'] ?? null,
+        ], fn ($part): bool => is_string($part) && trim($part) !== '')));
+        $locality = $tags['addr:city'] ?? $tags['addr:town'] ?? $tags['addr:village'] ?? null;
+
+        $parts = array_filter([$street, $locality, $tags['addr:postcode'] ?? null], fn ($part): bool => is_string($part) && trim($part) !== '');
+        $address = implode(', ', array_map('trim', $parts));
+
+        return $address === '' ? null : mb_substr($address, 0, 255);
+    }
+
+    private function distanceInKm(float $fromLatitude, float $fromLongitude, float $toLatitude, float $toLongitude): float
+    {
+        $earthRadiusKm = 6371.0;
+        $latitudeDelta = deg2rad($toLatitude - $fromLatitude);
+        $longitudeDelta = deg2rad($toLongitude - $fromLongitude);
+        $a = sin($latitudeDelta / 2) ** 2
+            + cos(deg2rad($fromLatitude)) * cos(deg2rad($toLatitude)) * sin($longitudeDelta / 2) ** 2;
+
+        return 2 * $earthRadiusKm * asin(min(1, sqrt($a)));
     }
 }

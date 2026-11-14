@@ -13,6 +13,7 @@
             <button type="button" data-task7-action="weather" data-endpoint="{{ route('integrations.weather') }}">Use my location</button>
             <p class="task7-status" data-status="weather" role="status"></p>
             <div class="task7-results" data-results="weather"></div>
+            <p class="task7-attribution">Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>.</p>
         </section>
         <section class="task7-tool" aria-labelledby="nearby-tool-heading">
             <h3 id="nearby-tool-heading">Nearby cinemas</h3>
@@ -20,6 +21,7 @@
             <button type="button" data-task7-action="nearby" data-endpoint="{{ route('integrations.nearby') }}">Find nearby places</button>
             <p class="task7-status" data-status="nearby" role="status"></p>
             <div class="task7-results" data-results="nearby"></div>
+            <p class="task7-attribution">Place data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.</p>
         </section>
     </div>
 </section>
@@ -33,6 +35,8 @@
     .task7-tool { display: grid; align-content: start; gap: 10px; padding: 16px; border-radius: 8px; background: #191f27; }
     .task7-tool h3, .task7-tool p { margin: 0; }
     .task7-status { min-height: 1.5em; color: #c6ccd4; }
+    .task7-attribution { color: #a8b0bb; font-size: 0.75rem; }
+    .task7-attribution a { color: #a8b0bb; }
     .task7-result-list { display: grid; gap: 8px; padding-left: 20px; }
     .task7-result-list a { color: #e0ae55; }
     .task7-result-list small { color: #a8b0bb; }

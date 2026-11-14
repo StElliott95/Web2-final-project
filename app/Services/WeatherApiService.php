@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -15,36 +16,71 @@ class WeatherApiService
             throw new RuntimeException('Weather API endpoint is not configured.');
         }
 
-        $request = Http::acceptJson()->timeout((int) config('task7.timeout', 10));
-        $token = trim((string) config('task7.weather.token'));
+        $cacheKey = sprintf('task7:weather:%.2f:%.2f', $latitude, $longitude);
+        $cacheMinutes = max(1, (int) config('task7.weather.cache_minutes', 15));
 
-        if ($token !== '') {
-            $request = $request->withToken($token);
-        }
+        return Cache::store('file')->remember($cacheKey, now()->addMinutes($cacheMinutes), function () use ($endpoint, $latitude, $longitude): array {
+            $payload = Http::acceptJson()
+                ->timeout((int) config('task7.timeout', 15))
+                ->get($endpoint, [
+                    'latitude' => $latitude,
+                    'longitude' => $longitude,
+                    'current' => 'temperature_2m,weather_code',
+                    'timezone' => 'auto',
+                ])
+                ->throw()
+                ->json();
 
-        $response = $request->get($endpoint, [
-            'latitude' => $latitude,
-            'longitude' => $longitude,
-        ])->throw();
+            $temperature = data_get($payload, 'current.temperature_2m');
+            $weatherCode = data_get($payload, 'current.weather_code');
 
-        $payload = $response->json();
+            if (! is_numeric($temperature) || ! is_numeric($weatherCode)) {
+                throw new RuntimeException('Open-Meteo returned an invalid current weather response.');
+            }
 
-        if (! is_array($payload)) {
-            throw new RuntimeException('Weather API returned an invalid JSON response.');
-        }
+            [$condition, $description] = $this->describeWeatherCode((int) $weatherCode);
 
-        $temperature = data_get($payload, config('task7.weather.temperature_path', 'temperature_c'));
-        $condition = data_get($payload, config('task7.weather.condition_path', 'condition'));
-        $description = data_get($payload, config('task7.weather.description_path', 'description'));
+            return [
+                'temperature_c' => (float) $temperature,
+                'condition' => $condition,
+                'description' => $description,
+            ];
+        });
+    }
 
-        if (! is_numeric($temperature) || ! is_string($condition) || trim($condition) === '') {
-            throw new RuntimeException('Weather API response does not match the configured response contract.');
-        }
-
-        return [
-            'temperature_c' => (float) $temperature,
-            'condition' => trim($condition),
-            'description' => is_string($description) ? trim($description) : '',
-        ];
+    /** @return array{0: string, 1: string} */
+    private function describeWeatherCode(int $code): array
+    {
+        return match ($code) {
+            0 => ['Clear', 'Clear sky'],
+            1 => ['Mainly clear', 'Mainly clear'],
+            2 => ['Partly cloudy', 'Partly cloudy'],
+            3 => ['Cloudy', 'Overcast'],
+            45 => ['Fog', 'Fog'],
+            48 => ['Fog', 'Depositing rime fog'],
+            51 => ['Drizzle', 'Light drizzle'],
+            53 => ['Drizzle', 'Moderate drizzle'],
+            55 => ['Drizzle', 'Dense drizzle'],
+            56 => ['Drizzle', 'Light freezing drizzle'],
+            57 => ['Drizzle', 'Dense freezing drizzle'],
+            61 => ['Rain', 'Slight rain'],
+            63 => ['Rain', 'Moderate rain'],
+            65 => ['Rain', 'Heavy rain'],
+            66 => ['Rain', 'Light freezing rain'],
+            67 => ['Rain', 'Heavy freezing rain'],
+            71 => ['Snow', 'Slight snowfall'],
+            73 => ['Snow', 'Moderate snowfall'],
+            75 => ['Snow', 'Heavy snowfall'],
+            77 => ['Snow', 'Snow grains'],
+            80 => ['Rain showers', 'Slight rain showers'],
+            81 => ['Rain showers', 'Moderate rain showers'],
+            82 => ['Rain showers', 'Violent rain showers'],
+            85 => ['Snow showers', 'Slight snow showers'],
+            86 => ['Snow showers', 'Heavy snow showers'],
+            95 => ['Thunderstorm', 'Thunderstorm'],
+            96 => ['Thunderstorm', 'Thunderstorm with slight hail'],
+            99 => ['Thunderstorm', 'Thunderstorm with heavy hail'],
+            default => ['Unknown', 'Weather conditions unavailable'],
+        };
     }
 }
