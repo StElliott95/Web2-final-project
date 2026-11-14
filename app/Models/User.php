@@ -11,12 +11,13 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
+    protected $attributes = ['role' => 'user'];
 
-    protected $fillable = ['name', 'email', 'password', 'bio', 'avatar_url', 'role'];
+    protected $fillable = ['name', 'email', 'password', 'bio', 'avatar_url'];
 
     protected $hidden = ['password', 'remember_token'];
 
-    protected $casts = ['email_verified_at' => 'datetime'];
+    protected $casts = ['email_verified_at' => 'datetime', 'password' => 'hashed'];
 
     public function socialAccounts(): HasMany
     {
@@ -63,3 +64,6 @@ class User extends Authenticatable
        return $this->hasMany(WatchHistory::class);
    }
 }
+
+
+
