@@ -15,16 +15,16 @@ class MapsGeolocationService
         $endpoint = trim((string) config('task7.maps.endpoint'));
         $fallbackEndpoint = trim((string) config('task7.maps.fallback_endpoint'));
 
-        // The main public endpoint has recently timed out for this project, so
-        // prefer the alternate public instance even when an old .env selects it.
-        if (str_contains($endpoint, 'overpass-api.de') && str_contains($fallbackEndpoint, 'overpass.private.coffee')) {
-            [$endpoint, $fallbackEndpoint] = [$fallbackEndpoint, $endpoint];
-        }
-
         if ($endpoint !== '' && rtrim($fallbackEndpoint, '/') === rtrim($endpoint, '/')) {
             $fallbackEndpoint = str_contains($endpoint, 'overpass-api.de')
                 ? 'https://overpass.private.coffee/api/interpreter'
                 : 'https://overpass-api.de/api/interpreter';
+        }
+
+        // The main public endpoint has recently timed out for this project, so
+        // prefer the alternate public instance even when an old .env selects it.
+        if (str_contains($endpoint, 'overpass-api.de') && str_contains($fallbackEndpoint, 'overpass.private.coffee')) {
+            [$endpoint, $fallbackEndpoint] = [$fallbackEndpoint, $endpoint];
         }
 
         $endpoints = array_values(array_unique(array_filter([$endpoint, $fallbackEndpoint])));
