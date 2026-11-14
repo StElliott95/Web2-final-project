@@ -1,0 +1,1 @@
+<nav class="feature-nav" aria-label="Administration"><a href="{{ route('admin.dashboard') }}">Overview</a><a href="{{ route('admin.users') }}">Users</a><a href="{{ route('admin-reviews') }}">Reviews</a><a href="{{ route('admin.movies') }}">Movies</a><a href="{{ route('admin.activity') }}">Activity</a></nav>

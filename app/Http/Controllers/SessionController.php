@@ -7,7 +7,7 @@ class SessionController extends Controller
     public function create() { return view('auth.login'); }
     public function store(Request $request) {
         $data = $request->validate(['email'=>'required|email','password'=>'required|string']);
-        if (!Auth::attempt($data)) return back()->withErrors(['email'=>'Invalid credentials.'])->onlyInput('email');
+        if (!Auth::attempt([...$data, 'is_active' => true])) return back()->withErrors(['email'=>'Invalid credentials.'])->onlyInput('email');
         $request->session()->regenerate();
         return redirect()->intended(route('discover'));
     }
