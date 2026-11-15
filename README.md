@@ -23,21 +23,20 @@ Use the branch and pull request process in CONTRIBUTING.md. The main-branch prot
 
 ## Task 7 integrations
 
-- [Task 7 API Integrations](docs/Task_7_API_Integrations.docx) documents the weather, maps/geolocation, sentiment, calendar, and real-time discussion integrations.
-- Weather uses Open-Meteo and nearby cinemas use OpenStreetMap data through Overpass as no-key defaults; the page includes provider attribution. Open-Meteo's free API is for non-commercial use. Review sentiment defaults to the open-source VADER English lexicon running locally; no hosted inference credits or API token are needed.
+- [Task 7 API Integrations](docs/Task_7_API_Integrations.docx) documents the weather, maps/geolocation, calendar, and real-time discussion integrations. Sentiment analysis is excluded from the current implementation.
+- Weather uses Open-Meteo and nearby cinemas use OpenStreetMap data through Overpass as no-key defaults; the page includes provider attribution. Open-Meteo's free API is for non-commercial use.
 
 ## Running the integrated tasks
 
-Requires PHP 8.2 or newer, Composer, MySQL, and Python 3.8 or newer for local sentiment analysis. Blade templates use the shared inline styles; no Node build is required.
+Requires PHP 8.2 or newer, Composer, and MySQL. Blade templates use the shared inline styles; no Node build is required.
 
 1. Run `composer install` and copy `.env.example` to `.env`.
 2. Create an empty MySQL database and configure `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` in `.env`.
-3. Install the local sentiment dependency with `python -m pip install -r requirements-sentiment.txt`.
-4. Run `php artisan key:generate` and `php artisan migrate`.
-5. For local demonstration data, run `php artisan db:seed --class=TeamDemoSeeder`.
-6. Run `php artisan config:clear` so Laravel switches from any cached Hugging Face settings to the free local analyzer.
-7. Start the local sentiment helper in a separate terminal with `python scripts\sentiment_api.py` on Windows (`python scripts/sentiment_api.py` elsewhere); keep it running while using sentiment analysis.
-8. Run `php artisan serve`. With XAMPP in `C:\xampp\htdocs\Web2`, use `http://localhost/Web2/public` instead.
+3. Run `php artisan key:generate` and `php artisan migrate`.
+4. For local demonstration data, run `php artisan db:seed --class=TeamDemoSeeder`.
+5. Run `php artisan serve`. With XAMPP in `C:\xampp\htdocs\Web2`, use `http://localhost/Web2/public` instead.
+
+After pulling the sentiment removal on an existing database, run `php artisan migrate`; the cleanup migration drops the old sentiment columns and stored results.
 
 The seeder creates local demonstration accounts and runs only in local/testing environments. Do not use its accounts outside local development. Login supports the team's existing users; registration remains owned by the authentication task.
 
@@ -47,7 +46,7 @@ Admin flow: sign in, open **Admin**, then manage users, edit local movies, use t
 
 Task 6 uses normalized catalogue relationships, viewing history, and the team's 1–10 review scale. Task 8 adds private/public lists with unique movie membership. Task 11 reuses existing review moderation and adds administration and activity tracking. All features share the team's charcoal and muted-gold Blade layout.
 
-Set `TMDB_READ_ACCESS_TOKEN` for live discovery. Without it, discovery and details use saved catalogue data. Sentiment runs locally through VADER and needs no API key or recurring payment. The optional hosted Hugging Face provider can be selected explicitly with `SENTIMENT_PROVIDER=huggingface` and may require credits. Keep any credentials in `.env`; never commit them. The local demo contains six saved films with unavailable-poster placeholders.
+Set `TMDB_READ_ACCESS_TOKEN` for live discovery. Without it, discovery and details use saved catalogue data. Keep credentials in `.env`; never commit them. The local demo contains six saved films with unavailable-poster placeholders.
 
 ## Integration tests
 

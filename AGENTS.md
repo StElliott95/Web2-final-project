@@ -23,9 +23,9 @@ The current team assignment for this contributor covers project objectives 1, 2,
 
 ## External services
 
-Use only the services named in the project brief for this scope: TMDB, Weather API, Maps/Geolocation API, Sentiment Analysis API, Calendar Integration, and WebSockets or another real-time technology for discussions. Do not replace them with unrelated services or choose a vendor where the brief does not specify one without asking the team leader.
+Use only the services named in the project brief for this scope: TMDB, Weather API, Maps/Geolocation API, Calendar Integration, and WebSockets or another real-time technology for discussions. Sentiment analysis was removed from the current implementation; do not re-add it unless the team leader explicitly reassigns it. Do not replace other named services with unrelated services.
 
-Sentiment output belongs beside the teammate-owned review feature; do not duplicate review management. The discussion room is part of objective 7.
+Do not add sentiment routes, fields, or UI unless the team leader explicitly reassigns that feature. The discussion room is part of objective 7.
 
 ## Documentation and version control
 

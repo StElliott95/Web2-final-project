@@ -3,7 +3,6 @@
 use App\Http\Controllers\CalendarExportController;
 use App\Http\Controllers\DiscussionRoomController;
 use App\Http\Controllers\NearbyCinemaController;
-use App\Http\Controllers\ReviewSentimentController;
 use App\Http\Controllers\WeatherController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,10 +16,6 @@ Route::get('/movies/{movie}/calendar.ics', CalendarExportController::class)
     ->name('integrations.calendar-export');
 
 Route::middleware('auth')->group(function () {
-    Route::post('/reviews/{review}/sentiment', [ReviewSentimentController::class, 'analyze'])
-        ->middleware('throttle:10,1')
-        ->name('integrations.review-sentiment');
-
     Route::get('/movies/{movie}/discussion', [DiscussionRoomController::class, 'show'])
         ->name('integrations.discussion-room');
     Route::get('/discussion-rooms/{room}/stream', [DiscussionRoomController::class, 'stream'])
