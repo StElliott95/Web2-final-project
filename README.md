@@ -36,7 +36,7 @@ Requires PHP 8.2 or newer, Composer, MySQL, and Python 3.8 or newer for local se
 4. Run `php artisan key:generate` and `php artisan migrate`.
 5. For local demonstration data, run `php artisan db:seed --class=TeamDemoSeeder`.
 6. Run `php artisan config:clear` so Laravel switches from any cached Hugging Face settings to the free local analyzer.
-7. Start the local sentiment helper in a separate terminal with `py scripts\sentiment_api.py` on Windows (`python scripts/sentiment_api.py` elsewhere); keep it running while using sentiment analysis.
+7. Start the local sentiment helper in a separate terminal with `python scripts\sentiment_api.py` on Windows (`python scripts/sentiment_api.py` elsewhere); keep it running while using sentiment analysis.
 8. Run `php artisan serve`. With XAMPP in `C:\xampp\htdocs\Web2`, use `http://localhost/Web2/public` instead.
 
 The seeder creates local demonstration accounts and runs only in local/testing environments. Do not use its accounts outside local development. Login supports the team's existing users; registration remains owned by the authentication task.
