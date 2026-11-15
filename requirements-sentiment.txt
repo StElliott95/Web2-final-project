@@ -1,2 +1,0 @@
-# Free local sentiment analysis; no hosted API token or inference credits are needed.
-vaderSentiment==3.3.2
