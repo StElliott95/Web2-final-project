@@ -1,7 +1,8 @@
 <?php
 use App\Http\Controllers\MovieListController;
 use Illuminate\Support\Facades\Route;
-Route::get('/community/lists',[MovieListController::class,'browse'])->name('lists.public');
+Route::redirect('/community/lists','/lists/public');
+Route::get('/lists/public',[MovieListController::class,'browse'])->name('lists.public');
 Route::middleware('auth')->group(function() {
     Route::get('/lists',[MovieListController::class,'index'])->name('lists.index');
     Route::get('/lists/create',[MovieListController::class,'create'])->name('lists.create');

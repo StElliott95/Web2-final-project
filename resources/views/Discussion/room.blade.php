@@ -1,14 +1,15 @@
 @extends('layouts.app')
 
-@section('title', $movie->title . ' Discussion')
+@section('title', $room->title ?: 'Discussion')
+@section('head')@include('components.feature-style')@endsection
 
 @section('app-content')
     <section class="discussion-room" id="discussion-room"
-        data-stream-url="{{ route('integrations.discussion-stream', ['room' => $room->id, 'after' => $messages->last()?->id ?? 0]) }}">
-        <a class="discussion-back" href="{{ route('movies.show', $movie->tmdb_id) }}">← Back to movie</a>
-        <p class="eyebrow">MOVIE DISCUSSION</p>
-        <h1>{{ $room->title ?: $movie->title . ' discussion' }}</h1>
-        <p class="discussion-status" id="connection-status" role="status">Connecting to live discussion…</p>
+        data-stream-url="{{ $history->currentPage() === 1 ? route('integrations.discussion-stream', ['room' => $room->id, 'after' => $messages->last()?->id ?? 0]) : '' }}">
+        @if($room->community)<a class="discussion-back" href="{{ route('communities.show',$room->community) }}">← {{ $room->community->name }}</a>@elseif($movie)<a class="discussion-back" href="{{ route('movies.show', $movie->tmdb_id) }}">← Back to movie</a>@endif
+        <p class="eyebrow">{{ $movie ? 'MOVIE THREAD · '.$movie->title : 'COMMUNITY CHAT' }}</p>
+        <h1>{{ $room->title ?: 'Discussion' }}</h1>
+        <p class="discussion-status" id="connection-status" role="status">{{ $history->currentPage() === 1 ? 'Connecting to live discussion…' : 'Earlier messages. Open page 1 to return to live chat.' }}</p>
 
         <div class="discussion-messages" id="discussion-messages" aria-live="polite" aria-relevant="additions">
             @forelse($messages as $message)
@@ -23,7 +24,9 @@
                 <p class="discussion-empty">No messages yet. Start the conversation.</p>
             @endforelse
         </div>
+        {{ $history->links('components.team-pagination') }}
 
+        @if($history->currentPage() === 1)
         <form class="discussion-composer" id="discussion-form"
             action="{{ route('integrations.discussion-messages', $room->id) }}" method="POST">
             @csrf
@@ -32,6 +35,7 @@
             <button type="submit">Send message</button>
             <p id="send-status" role="status"></p>
         </form>
+        @else<a class="btn" href="{{ $history->url(1) }}">Back to live chat</a>@endif
     </section>
 
     <style>
@@ -56,6 +60,7 @@
         const form = document.getElementById('discussion-form');
         const status = document.getElementById('connection-status');
         const sendStatus = document.getElementById('send-status');
+        if (!form || !root.dataset.streamUrl) return;
 
         function appendMessage(message) {
             const selector = '[data-message-id="' + Number(message.id) + '"]';
