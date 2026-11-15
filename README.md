@@ -56,6 +56,8 @@ Set `TMDB_READ_ACCESS_TOKEN` for live discovery. Without it, discovery and detai
 
 ## Integration tests
 
+The authentication review suite is `tests/Feature/AuthenticationFlowTest.php`. It covers registration, privileged-field protection, remember-me login, suspension, profile and password changes, password reset notification/token handling, and GitHub callback validation. Run `php artisan test --filter=AuthenticationFlowTest` with the isolated test database configured below. OAuth HTTP responses and reset notifications are faked; these checks do not verify real GitHub credentials or email delivery.
+
 Create a separate empty MySQL database with `_test_` in its name. Copy `.env` to `.env.testing`, set `APP_ENV=testing` and point its database credentials to this isolated database. Never use the demonstration or shared team database for tests. Run `php artisan test`; the suite migrates the isolated database and checks recommendations, list ownership, admin permissions, suspension, normalized movie edits, moderation, and unique viewer statistics.
 
 The merge sequence was PR #7 runtime foundation → PR #6 API integrations → PR #8 recommendations → PR #9 movie lists → PR #10 administration. Each dependent branch was synchronized after its prerequisite merged.
