@@ -36,6 +36,8 @@ Requires PHP 8.2 or newer, Composer, and MySQL. Blade templates use the shared i
 4. For local demonstration data, run `php artisan db:seed --class=TeamDemoSeeder`.
 5. Run `php artisan serve`. With XAMPP in `C:\xampp\htdocs\Web2`, use `http://localhost/Web2/public` instead.
 
+After pulling the sentiment removal on an existing database, run `php artisan migrate`; the cleanup migration drops the old sentiment columns and stored results.
+
 The seeder creates local demonstration accounts and runs only in local/testing environments. Do not use its accounts outside local development. Login supports the team's existing users; registration remains owned by the authentication task.
 
 Member flow: sign in, open **For you**, edit genre/actor/director preferences, then manage **My lists** or browse **Community**. Private lists are visible only to their owner. Public lists remain editable only by their owner.
