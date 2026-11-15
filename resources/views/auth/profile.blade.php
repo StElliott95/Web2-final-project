@@ -28,13 +28,40 @@
         <textarea id="bio" name="bio" maxlength="500">{{ old('bio', $user->bio) }}</textarea>
 
         @unless($isGithubSession)
-            <label for="current_password_profile">Current password</label>
-            <input id="current_password_profile" name="current_password" type="password" autocomplete="current-password" aria-describedby="profile-password-help">
-            <span id="profile-password-help" class="auth-help">Leave blank unless changing your email.</span>
+            @php($emailWasChanged = old('email') && strtolower(trim(old('email'))) !== strtolower($user->email))
+            <div id="profile-current-password" @unless($emailWasChanged) hidden @endunless>
+                <label for="current_password_profile">Current password</label>
+                <input id="current_password_profile" name="current_password" type="password" autocomplete="current-password" aria-describedby="profile-password-help" {{ $emailWasChanged ? 'required' : '' }}>
+                <span id="profile-password-help" class="auth-help">Enter your current password to change your email address.</span>
+            </div>
         @endunless
 
         <button type="submit">Save profile</button>
     </form>
+
+    @unless($isGithubSession)
+        <script>
+            (() => {
+                const email = document.getElementById('email');
+                const passwordSection = document.getElementById('profile-current-password');
+                const password = document.getElementById('current_password_profile');
+                const originalEmail = @json(strtolower($user->email));
+
+                const syncPasswordRequirement = () => {
+                    const emailChanged = email.value.trim().toLowerCase() !== originalEmail;
+                    passwordSection.hidden = !emailChanged;
+                    password.required = emailChanged;
+
+                    if (!emailChanged) {
+                        password.value = '';
+                    }
+                };
+
+                email.addEventListener('input', syncPasswordRequirement);
+                syncPasswordRequirement();
+            })();
+        </script>
+    @endunless
 
     <hr class="auth-divider">
 
