@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('app-content')
 <h1>Review moderation</h1>
-@include('Reviews.sentiment-disclosure')
 <table>
 <thead>
 <tr>
@@ -9,7 +8,6 @@
 <th>Movie</th>
 <th>Rating</th>
 <th>Review</th>
-<th>Sentiment</th>
 <th>Status</th>
 <th>Actions</th>
 </tr>
@@ -21,19 +19,6 @@
 <td>{{ $row->getMovie->title }}</td>
 <td>{{ $row->rating }}/10</td>
 <td>{{ $row->body }}</td>
-<td>
-    @if($row->sentiment_label)
-        {{ ucfirst($row->sentiment_label) }}@if($row->sentiment_score !== null) ({{ number_format((float) $row->sentiment_score * 100, 0) }}%)@endif
-    @else
-        Not analyzed
-    @endif
-    @if($row->body)
-        <form action="{{ route('integrations.review-sentiment', $row->id) }}" method="POST">
-            @csrf
-            <button type="submit">{{ $row->sentiment_label ? 'Re-analyze' : 'Analyze sentiment' }}</button>
-        </form>
-    @endif
-</td>
 <td>{{ $row->is_hidden ? 'Hidden' : 'Visible' }}</td>
 <td>
 <form action="{{ route('toggle-review', $row->id) }}" method="POST" class="inline">
@@ -50,7 +35,7 @@
 </tr>
        @empty
 <tr>
-<td colspan="7">no reviews found</td>
+<td colspan="6">no reviews found</td>
 </tr>
        @endforelse
 </tbody>
