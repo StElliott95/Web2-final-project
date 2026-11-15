@@ -1,5 +1,5 @@
 <aside class="sentiment-disclosure" role="note">
-    Choosing sentiment analysis sends the review text to the configured external provider. The default is Hugging Face Inference with the <a href="https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment-latest" target="_blank" rel="noopener noreferrer">CardiffNLP English model</a>. Results are estimates, not moderation decisions. This app stores the returned label, score, and analysis time.
+    Choosing sentiment analysis sends the review text to a local analyzer running on this computer. The default uses the open-source VADER English sentiment lexicon; review text is not sent to an external provider. Scores are estimates, not calibrated probabilities or moderation decisions. This app stores the returned label, score, and analysis time.
 </aside>
 
 <style>
