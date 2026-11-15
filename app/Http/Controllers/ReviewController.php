@@ -63,6 +63,11 @@ class ReviewController extends Controller
            'body' => 'nullable|string|max:2000',
        ]);
        $row->fill($request->only(['rating', 'body']));
+       if ($row->isDirty('body')) {
+           $row->sentiment_label = null;
+           $row->sentiment_score = null;
+           $row->sentiment_analyzed_at = null;
+       }
        if ($row->isClean()) {
            return redirect()->route('list-reviews', $row->movie_id)->with('success', 'Nothing changed');
        }

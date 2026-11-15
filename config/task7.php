@@ -15,4 +15,11 @@ return [
         'cache_minutes' => (int) env('MAPS_API_CACHE_MINUTES', 60),
     ],
 
+    'sentiment' => [
+        'endpoint' => env('SENTIMENT_API_ENDPOINT'),
+        'account_id' => env('CLOUDFLARE_ACCOUNT_ID'),
+        'token' => env('CLOUDFLARE_API_TOKEN'),
+        'model' => env('SENTIMENT_API_MODEL', '@cf/huggingface/distilbert-sst-2-int8'),
+        'timeout' => (int) env('SENTIMENT_API_TIMEOUT', 20),
+    ],
 ];
