@@ -13,9 +13,10 @@ use Illuminate\View\View;
 
 class DiscussionRoomController extends Controller
 {
-    public function show(Movie $movie): View
+    public function show(Request $request, Movie $movie): View
     {
         $room = DiscussionRoom::query()
+            ->whereNull('community_id')
             ->where('movie_id', $movie->id)
             ->where('is_active', true)
             ->first();
@@ -31,15 +32,22 @@ class DiscussionRoomController extends Controller
 
         $this->joinRoom($room->id, (int) auth()->id());
 
-        $messages = $room->messages()
+        return $this->renderRoom($request,$room);
+    }
+
+    public function renderRoom(Request $request, DiscussionRoom $room): View
+    {
+        $request->validate(['page'=>'sometimes|integer|min:1']);
+        $movie = $room->movie;
+        $history = $room->messages()
             ->with('sender:id,name')
             ->orderByDesc('id')
-            ->limit(50)
-            ->get()
+            ->paginate(30);
+        $messages = $history->getCollection()
             ->sortBy('id')
             ->values();
 
-        return view('Discussion.room', compact('movie', 'room', 'messages'));
+        return view('Discussion.room', compact('movie', 'room', 'messages', 'history'));
     }
 
     public function send(Request $request, DiscussionRoom $room): JsonResponse
@@ -133,6 +141,9 @@ class DiscussionRoomController extends Controller
     private function ensureMember(DiscussionRoom $room): void
     {
         abort_unless($room->is_active, 404);
+        if ($room->community_id) {
+            abort_unless($room->community && $room->community->members()->where('users.id',auth()->id())->exists(),403,'Join this community first.');
+        }
 
         $isMember = DB::table('discussion_room_members')
             ->where('room_id', $room->id)

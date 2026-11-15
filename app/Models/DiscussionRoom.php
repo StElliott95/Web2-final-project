@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DiscussionRoom extends Model
 {
-    protected $fillable = ['movie_id', 'created_by', 'title', 'is_active'];
+    protected $fillable = ['movie_id', 'community_id', 'created_by', 'title', 'is_active'];
+
+    public function community(): BelongsTo { return $this->belongsTo(Community::class); }
 
     protected $casts = ['is_active' => 'boolean'];
 

@@ -4,20 +4,20 @@ use App\Models\{Movie,MoviePreference,Review,User,WatchHistory};
 use Illuminate\Support\Collection;
 class RecommendationService
 {
-    public function forUser(User $user, int $limit = 12): Collection {
+    public function forUser(User $user, ?int $limit = 12): Collection {
         $preferences = MoviePreference::where('user_id',$user->id)->first();
         $watched = WatchHistory::where('user_id',$user->id)->distinct()->pluck('movie_id');
         $ratings = Review::where('user_id',$user->id)->pluck('rating','movie_id');
         $excluded = $watched->merge($ratings->keys())->unique();
         $movies = Movie::with(['genres','credits.person'])->where('adult',false)->get();
         $seeds = $movies->whereIn('id',$excluded);
-        return $movies->whereNotIn('id',$excluded)->map(function($movie) use ($preferences,$seeds,$ratings) {
+        $ranked = $movies->whereNotIn('id',$excluded)->map(function($movie) use ($preferences,$seeds,$ratings) {
             $features = $this->features($movie);
             $score = (float)$movie->vote_average / 10;
-            $reasons = [];
+            $reasons = []; $preferenceScore = 0;
             foreach (['genres'=>3,'actors'=>4,'directors'=>4] as $key=>$weight) {
                 $matches = array_intersect($features[$key],$preferences?->$key ?? []);
-                $score += count($matches)*$weight;
+                $preferenceScore += count($matches)*$weight;
                 if ($matches) $reasons[] = 'Matches your favorite '.$key;
             }
             $best = 0; $similarTitle = null;
@@ -33,8 +33,9 @@ class RecommendationService
                 if ($contribution > $best) { $best=$contribution; $similarTitle=$seed->title; }
             }
             if ($similarTitle) $reasons[]='Similar to '.$similarTitle;
-            return ['movie'=>$movie,'score'=>$score,'reasons'=>$reasons ?: ['Highly rated in the saved catalogue']];
-        })->sort(fn($a,$b)=>($b['score']<=>$a['score']) ?: ($a['movie']->id<=>$b['movie']->id))->take($limit)->values();
+            return ['movie'=>$movie,'score'=>$score + $preferenceScore,'preference_score'=>$preferenceScore,'reasons'=>$reasons ?: ['Highly rated in the saved catalogue']];
+        })->sort(fn($a,$b)=>($b['preference_score']<=>$a['preference_score']) ?: ($b['score']<=>$a['score']) ?: ($a['movie']->id<=>$b['movie']->id))->values();
+        return $limit === null ? $ranked : $ranked->take($limit);
     }
     private function features(Movie $movie): array {
         return [

@@ -3,9 +3,23 @@ namespace App\Http\Controllers;
 use App\Models\{Genre,Person,MoviePreference};
 use App\Services\RecommendationService;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 class RecommendationController extends Controller {
     public function index(Request $request,RecommendationService $service) {
-        return view('recommendations.index',['recommendations'=>$service->forUser($request->user())]);
+        $request->validate(['page'=>'sometimes|integer|min:1']);
+        $ranked = $service->forUser($request->user(), null);
+        $page = (int) $request->input('page', 1);
+        $preferences = MoviePreference::where('user_id',$request->user()->id)->first();
+        $favorites = [
+            'genres'=>Genre::whereIn('id',$preferences?->genres ?? [])->pluck('name'),
+            'actors'=>Person::whereIn('id',$preferences?->actors ?? [])->pluck('name'),
+            'directors'=>Person::whereIn('id',$preferences?->directors ?? [])->pluck('name'),
+        ];
+        return view('recommendations.index',[
+            'recommendations'=>new LengthAwarePaginator($ranked->forPage($page,12)->values(),$ranked->count(),12,$page,['path'=>$request->url()]),
+            'favorites'=>$favorites,
+            'matchingCount'=>$ranked->where('preference_score','>',0)->count(),
+        ]);
     }
     public function edit(Request $request) {
         return view('recommendations.preferences',[
@@ -25,6 +39,6 @@ class RecommendationController extends Controller {
         ]);
         foreach (['genres','actors','directors'] as $key) $data[$key]=array_map('intval',$data[$key]??[]);
         MoviePreference::updateOrCreate(['user_id'=>$request->user()->id],$data);
-        return redirect()->route('recommendations')->with('success','Preferences saved. Your recommendations have been updated.');
+        return redirect()->route('recommendations')->with('success','Preferences saved. Recommendations have been ranked again using your latest favorites.');
     }
 }

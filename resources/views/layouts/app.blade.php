@@ -62,7 +62,10 @@
             <a href="{{ route('discover') }}">Discover</a>
             <a href="{{ route('discover') }}#popular">Popular</a>
             <a href="{{ route('discover') }}#upcoming">Upcoming</a>
-        @if(Route::has('recommendations'))<a href="{{ route('recommendations') }}">For you</a>@endif @if(Route::has('lists.public'))<a href="{{ route('lists.public') }}">Community</a>@auth<a href="{{ route('lists.index') }}">My lists</a>@endauth @endif @auth @if(auth()->user()->role === 'admin' && Route::has('admin.dashboard'))<a href="{{ route('admin.dashboard') }}">Admin</a>@endif @endauth</nav>
+        @if(Route::has('recommendations'))<a href="{{ route('recommendations') }}">For you</a>@endif
+        @if(Route::has('communities.index'))<a href="{{ route('communities.index') }}">Communities</a>@endif
+        @if(Route::has('lists.public'))<a href="{{ route('lists.public') }}">Public lists</a>@auth<a href="{{ route('lists.index') }}">My lists</a>@endauth @endif
+        @auth @if(auth()->user()->role === 'admin' && Route::has('admin.dashboard'))<a href="{{ route('admin.dashboard') }}">Admin</a>@endif @endauth</nav>
         @auth
             <span class="header-account">{{ auth()->user()->name }}</span><form method="post" action="{{ route('logout') }}">@csrf<button>Sign out</button></form>
             @if(auth()->user()->role === 'admin' && \Illuminate\Support\Facades\Route::has('admin-reviews'))

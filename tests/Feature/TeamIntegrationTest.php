@@ -26,7 +26,7 @@ class TeamIntegrationTest extends TestCase {
     }
     public function test_all_member_and_admin_views_render(): void {
         $this->actingAs($this->member());
-        foreach(['/recommendations','/preferences','/lists','/lists/create','/community/lists','/watchlist','/watch-history'] as $url) $this->get($url)->assertOk();
+        foreach(['/recommendations','/preferences','/lists','/lists/create','/lists/public','/communities','/watchlist','/watch-history'] as $url) $this->get($url)->assertOk();
         $this->actingAs($this->admin());
         foreach(['/admin','/admin/users','/admin/reviews','/admin/movies','/admin/movies/create','/admin/movies/'.Movie::first()->id.'/edit','/admin/activity'] as $url) $this->get($url)->assertOk();
     }
@@ -54,7 +54,7 @@ class TeamIntegrationTest extends TestCase {
     public function test_private_list_is_not_exposed_to_other_users_or_guests(): void {
         $list=MovieList::where('is_public',false)->first();
         $this->get('/lists/'.$list->id)->assertForbidden();
-        $this->get('/community/lists')->assertDontSee($list->title);
+        $this->get('/lists/public')->assertDontSee($list->title);
         $this->actingAs($this->admin())->get('/lists/'.$list->id)->assertForbidden();
         $this->actingAs($this->member())->get('/lists/'.$list->id)->assertOk();
     }
