@@ -36,6 +36,7 @@ class RegistrationController extends Controller
         event(new Registered($user));
         Auth::login($user);
         $request->session()->regenerate();
+        $request->session()->put('auth_method', 'password');
 
         return redirect()->intended(route('discover'))
             ->with('success', 'Your account is ready.');

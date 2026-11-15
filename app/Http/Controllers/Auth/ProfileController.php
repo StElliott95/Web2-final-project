@@ -16,8 +16,9 @@ class ProfileController extends Controller
     public function edit(Request $request): View
     {
         $user = $request->user()->load('socialAccounts');
+        $isGithubSession = $request->session()->get('auth_method') === 'github';
 
-        return view('auth.profile', compact('user'));
+        return view('auth.profile', compact('user', 'isGithubSession'));
     }
 
     public function update(Request $request): RedirectResponse
@@ -31,9 +32,16 @@ class ProfileController extends Controller
         ]);
         $email = strtolower(trim($data['email']));
         $emailChanged = $email !== strtolower($user->email);
+        $isGithubSession = $request->session()->get('auth_method') === 'github';
+        $currentPassword = $data['current_password'] ?? null;
 
-        if ($emailChanged && (! filled($data['current_password'] ?? null)
-            || ! Hash::check($data['current_password'], $user->password))) {
+        if (filled($currentPassword) && ! Hash::check($currentPassword, $user->password)) {
+            return back()->withErrors([
+                'current_password' => 'The current password is incorrect.',
+            ])->withInput($request->except('current_password'));
+        }
+
+        if ($emailChanged && ! $isGithubSession && ! filled($currentPassword)) {
             return back()->withErrors([
                 'current_password' => 'Enter your current password to change your email address.',
             ])->withInput($request->except('current_password'));
@@ -56,16 +64,23 @@ class ProfileController extends Controller
 
     public function updatePassword(Request $request): RedirectResponse
     {
+        $isGithubSession = $request->session()->get('auth_method') === 'github';
         $data = $request->validate([
-            'current_password' => ['required', 'current_password'],
+            'current_password' => $isGithubSession ? ['nullable', 'string', 'max:255'] : ['required', 'current_password'],
             'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
         ]);
+
+        if ($isGithubSession && filled($data['current_password'] ?? null)
+            && ! Hash::check($data['current_password'], $request->user()->password)) {
+            return back()->withErrors(['current_password' => 'The current password is incorrect.']);
+        }
 
         $request->user()->forceFill([
             'password' => $data['password'],
             'remember_token' => Str::random(60),
         ])->save();
         $request->session()->regenerate();
+        $request->session()->put('auth_method', 'password');
 
         return back()->with('success', 'Your password has been changed.');
     }

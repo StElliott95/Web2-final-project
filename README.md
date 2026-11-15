@@ -40,7 +40,7 @@ The seeder creates local demonstration accounts and runs only in local/testing e
 
 ## Authentication
 
-Registration and sign-in use the Laravel session guard. Passwords are hashed by the `User` model, login and recovery endpoints are rate-limited, and password resets use Laravel's password broker and the existing `password_reset_tokens` table. Profile updates never accept a role or account-status field; changing an email requires the current password.
+Registration and sign-in use the Laravel session guard. Passwords are hashed by the `User` model, login and recovery endpoints are rate-limited, and password resets use Laravel's password broker and the existing `password_reset_tokens` table. Profile updates never accept a role or account-status field; password-authenticated sessions require the current password for email changes, while GitHub-authenticated sessions use the active GitHub sign-in.
 
 The example environment uses `MAIL_MAILER=log`, so password-reset links are written to `storage/logs/laravel.log` during local development. Configure Laravel's `MAIL_*` settings for a real mail transport before using password recovery outside a local demo.
 

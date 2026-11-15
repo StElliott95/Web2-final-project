@@ -94,6 +94,7 @@ class SocialAuthController extends Controller
 
             Auth::login($user);
             $request->session()->regenerate();
+            $request->session()->put('auth_method', 'github');
 
             return redirect()->intended(route('discover'))->with('success', 'You are signed in with GitHub.');
         } catch (ConnectionException|RequestException|RuntimeException $exception) {
