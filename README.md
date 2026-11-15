@@ -32,7 +32,7 @@ Requires PHP 8.2 or newer, Composer, MySQL, and Python 3.8 or newer for local se
 
 1. Run `composer install` and copy `.env.example` to `.env`.
 2. Create an empty MySQL database and configure `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` in `.env`.
-3. Install the local sentiment dependency with `py -m pip install -r requirements-sentiment.txt` on Windows (`python -m pip install -r requirements-sentiment.txt` elsewhere).
+3. Install the local sentiment dependency with `python -m pip install -r requirements-sentiment.txt`.
 4. Run `php artisan key:generate` and `php artisan migrate`.
 5. For local demonstration data, run `php artisan db:seed --class=TeamDemoSeeder`.
 6. Run `php artisan config:clear` so Laravel switches from any cached Hugging Face settings to the free local analyzer.
