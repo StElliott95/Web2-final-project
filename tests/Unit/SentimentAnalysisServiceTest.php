@@ -43,6 +43,29 @@ class SentimentAnalysisServiceTest extends TestCase
         );
     }
 
+    public function test_it_accepts_the_local_vader_response_without_a_token(): void
+    {
+        config([
+            'task7.sentiment.endpoint' => 'http://127.0.0.1:8765/analyze',
+            'task7.sentiment.token' => '',
+        ]);
+        Http::fake([
+            '127.0.0.1:8765/analyze' => Http::response([
+                'label' => 'positive',
+                'score' => 0.91,
+            ]),
+        ]);
+
+        $result = app(SentimentAnalysisService::class)->analyze('A great movie.');
+
+        $this->assertSame(['label' => 'positive', 'score' => 0.91], $result);
+        Http::assertSent(fn (Request $request): bool =>
+            $request->url() === 'http://127.0.0.1:8765/analyze'
+            && ! $request->hasHeader('Authorization')
+            && $request['inputs'] === 'A great movie.'
+        );
+    }
+
     public function test_it_accepts_a_single_named_prediction(): void
     {
         Http::fake([
