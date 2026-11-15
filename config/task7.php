@@ -1,5 +1,7 @@
 <?php
 
+$sentimentProvider = strtolower((string) env('SENTIMENT_PROVIDER', 'local'));
+
 return [
     'timeout' => (int) env('TASK7_API_TIMEOUT', 15),
 
@@ -16,8 +18,11 @@ return [
     ],
 
     'sentiment' => [
-        'endpoint' => env('SENTIMENT_API_ENDPOINT') ?: 'https://router.huggingface.co/hf-inference/models/cardiffnlp/twitter-roberta-base-sentiment-latest',
-        'token' => env('SENTIMENT_API_TOKEN') ?: env('HF_TOKEN'),
+        'provider' => $sentimentProvider,
+        'endpoint' => $sentimentProvider === 'local'
+            ? (env('SENTIMENT_LOCAL_ENDPOINT') ?: 'http://127.0.0.1:8765/analyze')
+            : (env('SENTIMENT_API_ENDPOINT') ?: 'https://router.huggingface.co/hf-inference/models/cardiffnlp/twitter-roberta-base-sentiment-latest'),
+        'token' => $sentimentProvider === 'local' ? '' : (env('SENTIMENT_API_TOKEN') ?: env('HF_TOKEN')),
         'timeout' => (int) env('SENTIMENT_API_TIMEOUT', 30),
     ],
 ];
