@@ -23,7 +23,7 @@ Use the branch and pull request process in CONTRIBUTING.md. The main-branch prot
 
 ## Task 7 integrations
 
-- [Task 7 API Integrations](docs/Task_7_API_Integrations.docx) documents the weather, maps/geolocation, calendar, and real-time discussion integrations. Sentiment analysis is excluded from the current implementation.
+- [Task 7 API Integrations](docs/Task_7_API_Integrations.docx) documents weather, maps/geolocation, sentiment, calendar, and real-time discussion. Sentiment uses Cloudflare Workers AI's hosted English DistilBERT SST-2 classifier. Set `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` in `.env`; the Free plan currently includes 10,000 neurons per day and rejects over-limit requests without billing.
 - Weather uses Open-Meteo and nearby cinemas use OpenStreetMap data through Overpass as no-key defaults; the page includes provider attribution. Open-Meteo's free API is for non-commercial use.
 
 ## Running the integrated tasks
@@ -36,7 +36,7 @@ Requires PHP 8.2 or newer, Composer, and MySQL. Blade templates use the shared i
 4. For local demonstration data, run `php artisan db:seed --class=TeamDemoSeeder`.
 5. Run `php artisan serve`. With XAMPP in `C:\xampp\htdocs\Web2`, use `http://localhost/Web2/public` instead.
 
-After pulling the sentiment removal on an existing database, run `php artisan migrate`; the cleanup migration drops the old sentiment columns and stored results.
+Run `php artisan migrate` after pulling. The forward migration restores the sentiment columns on databases that already applied the cleanup migration; previously saved sentiment results were deleted and must be regenerated.
 
 The seeder creates local demonstration accounts and runs only in local/testing environments. Do not use its accounts outside local development. Login supports the team's existing users; registration remains owned by the authentication task.
 
@@ -46,7 +46,7 @@ Admin flow: sign in, open **Admin**, then manage users, edit local movies, use t
 
 Task 6 uses normalized catalogue relationships, viewing history, and the team's 1–10 review scale. Task 8 adds private/public lists with unique movie membership. Task 11 reuses existing review moderation and adds administration and activity tracking. All features share the team's charcoal and muted-gold Blade layout.
 
-Set `TMDB_READ_ACCESS_TOKEN` for live discovery. Without it, discovery and details use saved catalogue data. Keep credentials in `.env`; never commit them. The local demo contains six saved films with unavailable-poster placeholders.
+Set `TMDB_READ_ACCESS_TOKEN` for live discovery. Without it, discovery and details use saved catalogue data. Review text is sent to Cloudflare only after the owner or an administrator requests analysis. Keep `CLOUDFLARE_API_TOKEN` in `.env`; never commit it. The local demo contains six saved films with unavailable-poster placeholders.
 
 ## Integration tests
 

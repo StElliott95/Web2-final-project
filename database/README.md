@@ -22,7 +22,7 @@ The repository was empty when these migrations were added. If a fresh Laravel pr
 - Weather API and Maps/Geolocation API responses are request-time data and are not stored by this schema.
 - Calendar credentials are stored in calendar connection rows and encrypted by Laravel model casts.
 - Discussion room messages are persisted in MySQL; WebSockets handle real-time delivery.
-- Sentiment analysis is excluded from the current implementation; the review system has no sentiment fields or external analysis calls.
+- Sentiment results are stored as nullable fields on existing review records and restored by a forward migration. An authenticated review owner or administrator can request analysis; review text is sent to Cloudflare Workers AI only after that request.
 - API keys belong in Laravel environment configuration, not in database rows. The brief names the integration services but does not specify endpoint URLs or API versions, so this database layer does not invent them.
 
 ## Tables
