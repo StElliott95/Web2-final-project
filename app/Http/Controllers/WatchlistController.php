@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 use App\Models\Movie;
+use App\Models\Review;
 use App\Models\WatchHistory;
 use App\Models\WatchlistItem;
 use Illuminate\Http\Request;
@@ -23,7 +24,12 @@ class WatchlistController extends Controller
        // movies that are NOT in my watchlist yet (for the dropdown)
        $inList = WatchlistItem::where('user_id', auth()->id())->pluck('movie_id');
        $movies = Movie::whereNotIn('id', $inList)->orderBy('title')->get();
-       return view('Watchlist.list', compact('toWatch', 'watched', 'movies'));
+      // audience sentiment for every movie in my watchlist (1 grouped query)
+
+       $sentiments = Review::sentimentSummaries($inList);
+
+       return view('Watchlist.list', compact('toWatch', 'watched', 'movies', 'sentiments'));
+ 
    }
    // add a movie
    function addMovie(Request $request)

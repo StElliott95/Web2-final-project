@@ -3,26 +3,27 @@
 <h1>My watchlist</h1>
 <a href="{{ route('watch-history') }}" class="btn">Watch history</a>
 <hr>
-   {{-- add a movie --}}
+{{-- add a movie --}}
 <form action="{{ route('add-watchlist') }}" method="POST">
-       @csrf
+   @csrf
 <select name="movie_id" required>
 <option value="">-- choose a movie --</option>
-           @foreach($movies as $movie)
+       @foreach($movies as $movie)
 <option value="{{ $movie->id }}">{{ $movie->title }}</option>
-           @endforeach
+       @endforeach
 </select>
 <button type="submit">Add to watchlist</button>
 </form>
 <h3>To watch ({{ $toWatch->count() }})</h3>
 <table>
 <thead>
-<tr><th>Movie</th><th>Actions</th></tr>
+<tr><th>Movie</th><th>Audience sentiment</th><th>Actions</th></tr>
 </thead>
 <tbody>
        @forelse($toWatch as $row)
 <tr>
 <td>{{ $row->getMovie->title }}</td>
+<td>@include('Reviews.sentiment-summary', ['summary' => $sentiments[$row->movie_id] ?? null, 'compact' => true])</td>
 <td>
 <form action="{{ route('watched-watchlist', $row->id) }}" method="POST" class="inline">
                        @csrf
@@ -37,19 +38,20 @@
 </td>
 </tr>
        @empty
-<tr><td colspan="2">your watchlist is empty</td></tr>
+<tr><td colspan="3">your watchlist is empty</td></tr>
        @endforelse
 </tbody>
 </table>
 <h3>Watched ({{ $watched->count() }})</h3>
 <table>
 <thead>
-<tr><th>Movie</th><th>Watched</th><th>Actions</th></tr>
+<tr><th>Movie</th><th>Audience sentiment</th><th>Watched</th><th>Actions</th></tr>
 </thead>
 <tbody>
        @forelse($watched as $row)
 <tr>
 <td>{{ $row->getMovie->title }}</td>
+<td>@include('Reviews.sentiment-summary', ['summary' => $sentiments[$row->movie_id] ?? null, 'compact' => true])</td>
 <td>{{ $row->watched_at->diffForHumans() }}</td>
 <td>
 <form action="{{ route('unwatched-watchlist', $row->id) }}" method="POST" class="inline">
@@ -65,7 +67,7 @@
 </td>
 </tr>
        @empty
-<tr><td colspan="3">no watched movies yet</td></tr>
+<tr><td colspan="4">no watched movies yet</td></tr>
        @endforelse
 </tbody>
 </table>

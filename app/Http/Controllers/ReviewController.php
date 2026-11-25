@@ -23,7 +23,9 @@ class ReviewController extends Controller
        $myReview = Review::where('movie_id', $movieId)
            ->where('user_id', auth()->id())
            ->first();
-       return view('Reviews.list', compact('movie', 'data', 'average', 'myReview'));
+      // positive / negative summary of the analyzed reviews (null if none analyzed yet)
+      $sentiment = Review::sentimentSummaries([$movie->id])[$movie->id] ?? null;
+      return view('Reviews.list', compact('movie', 'data', 'average', 'myReview', 'sentiment'));
    }
    // add a review
    function saveReview(Request $request, $movieId)
