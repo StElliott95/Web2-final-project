@@ -65,6 +65,7 @@
         @if(Route::has('recommendations'))<a href="{{ route('recommendations') }}">For you</a>@endif
         @if(Route::has('communities.index'))<a href="{{ route('communities.index') }}">Communities</a>@endif
         @if(Route::has('lists.public'))<a href="{{ route('lists.public') }}">Public lists</a>@auth<a href="{{ route('lists.index') }}">My lists</a>@endauth @endif
+        @auth @if(Route::has('feed'))<a href="{{ route('feed') }}">Feed</a><a href="{{ route('list-users') }}">People</a><a href="{{ route('privacy-settings') }}">Privacy</a>@endif @endauth
         @auth @if(auth()->user()->role === 'admin' && Route::has('admin.dashboard'))<a href="{{ route('admin.dashboard') }}">Admin</a>@endif @endauth</nav>
         @auth
             <span class="header-account">{{ auth()->user()->name }}</span><form method="post" action="{{ route('logout') }}">@csrf<button>Sign out</button></form>
