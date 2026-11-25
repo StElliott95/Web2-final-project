@@ -63,6 +63,39 @@ class User extends Authenticatable
    {
        return $this->hasMany(WatchHistory::class);
    }
+   // Task 9: follow users (many to many on the same table)
+
+    // the users that I follow
+
+    public function getFollowing()
+
+    {
+
+        return $this->belongsToMany(User::class, 'follows', 'follower_id', 'following_id')->withTimestamps();
+
+    }
+
+    // the users that follow me
+
+    public function getFollowers()
+
+    {
+
+        return $this->belongsToMany(User::class, 'follows', 'following_id', 'follower_id')->withTimestamps();
+
+    }
+
+    // do I follow this user?
+
+    public function isFollowing($userId)
+
+    {
+
+        return $this->getFollowing()->where('following_id', $userId)->exists();
+
+    }
+ 
+ 
 }
 
 

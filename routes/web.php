@@ -2,6 +2,7 @@
 require __DIR__.'/discovery.php';
 require __DIR__.'/reviews.php';
 require __DIR__.'/watchlist.php';
+require __DIR__.'/follows.php';
 require __DIR__.'/session.php';
 // Task modules can be integrated independently.
 foreach (['recommendations','lists','admin','communities'] as $feature) {
